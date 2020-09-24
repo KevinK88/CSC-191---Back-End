@@ -9,13 +9,10 @@ exports.createTask = (req, res) => {
     projectId: req.params.projectId,
     taskDescription: req.body.taskDescription,
     priority: req.body.priority,
-    dateCreated: new Date(),
-    dueDate: new Date(2020, 10, 10, 12),
-    completed: false,
+    dueDate: req.body.dueDate,
+    completed: req.body.completed,
     parentTaskId: "0",
     subTaskCount: 0,
-    completedSubTasks: 0,
-    dateCompleted: new Date(),
   };
 
   db.doc(`/projects/${req.params.projectId}`)
@@ -55,24 +52,6 @@ exports.editTaskDetails = (req, res) => {
         dueDate: req.body.dueDate,
         completed: req.body.completed,
       });
-
-      if (doc.data().completed) {
-        doc.ref.update({
-          dateCompleted: new Date(),
-        });
-        if (doc.data().parentTaskId !== "0") {
-          db.doc(`/tasks/${doc.data().parentTaskId}`)
-            .get()
-            .then((docTwo) => {
-              if (!docTwo.exists) {
-                return res.status(404).json({ error: "task not found" });
-              }
-              docTwo.ref.update({
-                completedSubTasks: docTwo.data().completedSubTasks + 1,
-              });
-            });
-        }
-      }
     })
     .then(() => {
       return res.status(203).json({ message: "Task details updated" });
@@ -110,11 +89,8 @@ exports.getTask = (req, res) => {
           taskDescription: doc.data().taskDescription,
           priority: doc.data().priority,
           subTaskCount: doc.data().subTaskCount,
-          completedSubTasks: doc.data().completedSubTasks,
           completed: doc.data().completed,
-          dateCreated: doc.data().dateCreated,
           dueDate: doc.data().dueDate,
-          dateCompleted: doc.data().dateCompleted,
         });
       });
       return res.json(taskData);
@@ -178,12 +154,9 @@ exports.createSubTask = (req, res) => {
     priority: req.body.priority,
     projectId: req.params.projectId,
     parentTaskId: req.params.taskId,
-    dateCreated: new Date(),
-    dueDate: new Date(2020, 10, 10, 12), //TODO: Let user set due date
-    completed: false,
+    dueDate: req.body.dueDate,
+    completed: req.body.completed,
     subTaskCount: 0,
-    completedSubTasks: 0,
-    dateCompleted: new Date(),
   };
 
   db.doc(`/tasks/${req.params.taskId}`)
